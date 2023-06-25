@@ -37,7 +37,7 @@ A lightweight locally hosted python powered password manager.
    ```
    for more information use `--help` argument.
 
-2. After running the script with mode specified enter values as requested by the script.
+2. Once you run the script and choose a mode, please provide the requested values as prompted by the script.
 
 
 
