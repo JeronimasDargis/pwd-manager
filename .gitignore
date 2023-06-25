@@ -1,2 +1,3 @@
 encrypted_values.txt
 .idea/
+*.pyc
