@@ -6,7 +6,6 @@ A lightweight locally hosted python powered password manager.
 
 - [Installation](#installation)
 - [Usage](#usage)
-- [Features](#features)
 
 ## Installation
 
@@ -28,19 +27,17 @@ A lightweight locally hosted python powered password manager.
 
 1. Run `main.py` script and provide mode as an argument.
 
-writing your password into the file
-
+   writing your password into the file.
    ```bash
    python main.py -m write
-
-reading your password from the file
-
+   ```
+   reading your password from the file.
    ```bash
    python main.py -m read
+   ```
+   for more information use `--help` argument.
 
-for more information use `--help` argument.
-
-2. After running the script with mode specified enter values as request by the script.
+2. After running the script with mode specified enter values as requested by the script.
 
 
 
