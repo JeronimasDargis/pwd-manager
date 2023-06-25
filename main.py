@@ -1,34 +1,25 @@
 #!/usr/bin/env/ python
-from Crypto.Cipher import AES
+
+# utils
+from utils.helper_functions import transform_key, encrypt_text, decrypt_text
+
+# constants
+from constants import KEY_MIN_LENGTH, FILENAME, MODE_WRITE, MODE_READ
+
+# libraries
 import optparse
 import binascii
-import hashlib
 import os
 import getpass
 
 
-filename = "encrypted_values.txt"
-
-
-def transform_key(key_str):
-    # Encode the string as bytes using UTF-8 encoding
-    key_bytes = key_str.encode('utf-8')
-
-    # Calculate the SHA-256 hash of the key bytes
-    sha256_hash = hashlib.sha256(key_bytes)
-
-    # Retrieve the digest (hash value) as bytes
-    digest_bytes = sha256_hash.digest()
-
-    # Return the first 32 bytes (256 bits) of the digest
-    key = digest_bytes[:32]
-
-    return key
+filename = FILENAME
 
 
 def get_arguments():
     parser = optparse.OptionParser()
-    parser.add_option("-m", "--mode", dest="encryption_mode", help="Defining the mode of the encryption.")
+    parser.add_option("-m", "--mode", dest="encryption_mode", help="Mode of the encryption. Possible values are "
+                                                                   "'write' or 'read'.")
     (options, arguments) = parser.parse_args()
     if not options.encryption_mode:
         parser.error("[-] Please specify a mode, use --help for more info.")
@@ -39,7 +30,7 @@ def get_arguments():
 def write_new_password():
     key = getpass.getpass("Enter your MASTER password (must be min 12 characters): ")
 
-    if not len(key) >= 12:
+    if not len(key) >= KEY_MIN_LENGTH:
         print("password must be 12 characters or longer!")
         return
 
@@ -87,27 +78,11 @@ def read_password():
         print("Password not found in the file.")
 
 
-def encrypt_text(key, text):
-    cipher = AES.new(key, AES.MODE_EAX)
-    ciphertext, tag = cipher.encrypt_and_digest(text.encode())
-    return cipher.nonce + tag + ciphertext
-
-
 def append_encrypted_text(key, password, search_key):
     encrypted_text = encrypt_text(key, password)
 
     with open(filename, 'ab') as file:
         file.write(search_key + ":" + binascii.hexlify(encrypted_text) + "\n")
-
-
-def decrypt_text(key, ciphertext):
-    nonce = ciphertext[:16]
-    tag = ciphertext[16:32]
-    encrypted_text = ciphertext[32:]
-
-    cipher = AES.new(key, AES.MODE_EAX, nonce)
-    decrypted_text = cipher.decrypt_and_verify(encrypted_text, tag)
-    return decrypted_text
 
 
 def read_encrypted_text(key, search_key):
@@ -125,12 +100,10 @@ def read_encrypted_text(key, search_key):
 
 def main():
     user_input = get_arguments()
-    if user_input.encryption_mode == "write":
-        print('user wants to write password')
+    if user_input.encryption_mode == MODE_WRITE:
         write_new_password()
 
-    if user_input.encryption_mode == "read":
-        print('user wants to read a password')
+    if user_input.encryption_mode == MODE_READ:
         read_password()
 
 
