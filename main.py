@@ -2,12 +2,28 @@
 from Crypto.Cipher import AES
 import optparse
 import binascii
+import hashlib
 # from Crypto.Random import get_random_bytes
 import os
 
 
-# function that takes a string "password" and appends to the encrypted_password.txt file
+def transform_key(key_str):
+    # Encode the string as bytes using UTF-8 encoding
+    key_bytes = key_str.encode('utf-8')
 
+    # Calculate the SHA-256 hash of the key bytes
+    sha256_hash = hashlib.sha256(key_bytes)
+
+    # Retrieve the digest (hash value) as bytes
+    digest_bytes = sha256_hash.digest()
+
+    # Return the first 32 bytes (256 bits) of the digest
+    key = digest_bytes[:32]
+
+    return key
+
+
+# function that takes a string "password" and appends to the encrypted_password.txt file
 def get_arguments():
     parser = optparse.OptionParser()
     parser.add_option("-m", "--mode", dest="encryption_mode", help="Defining the mode of the encryption.")
@@ -17,34 +33,42 @@ def get_arguments():
     (options, arguments) = parser.parse_args()
     if not options.encryption_mode:
         parser.error("[-] Please specify a mode, use --help for more info.")
-    # if options.encryption_mode == "write" and not options.encryption_key:
-    #     parser.error("[-] Please specify a key that will be used to encrypt your password, use --help for more info.")
-    # if options.encryption_mode == "write" and not options.password:
-    #     parser.error("[-] Please specify a password that will be encrypted, use --help for more info.")
     return options
 
 
 def write_new_password():
-    key = input("Enter the AES key (16, 24, or 32 bytes): ")
-    text = input("Enter the text to encrypt: ")
+    key = input("Enter your MASTER password (must be min 12 characters): ")
 
+    if not len(key) >= 12:
+        print("password must be 12 characters or longer!")
+        return
+
+    name = input("Enter your password name (will be used to find your password to decrypt):")
+    if not name:
+        print("Please provide name that your password will be stored under!")
+        return
+
+    text = input("Enter the password to encrypt: ")
+
+    hashed_key = transform_key(key)
 
     filename = "encrypted_text.txt"
     if not os.path.exists(filename):
         with open(filename, 'w') as file:
             pass
 
-    append_encrypted_text(filename, key, text)
+    append_encrypted_text(filename, hashed_key, text, name)
     print("Text encrypted and appended to", filename)
 
 
 def read_password():
-    # just for testing purposes
-    key = b'\x01\x23\x45\x67\x89\xab\xcd\xef\xfe\xdc\xba\x98\x76\x54\x32\x10'
+    key = input("Enter your MASTER password: ")
+    search_key = input("Enter the password name to decrypt: ")
     filename = "encrypted_text.txt"
-    search_key = 'secret'
 
-    decrypted_value = read_encrypted_text(filename, key, search_key)
+    hashed_key = transform_key(key)
+
+    decrypted_value = read_encrypted_text(filename, hashed_key, search_key)
     if decrypted_value is not None:
         print("Decrypted value:", decrypted_value)
     else:
@@ -57,11 +81,11 @@ def encrypt_text(key, text):
     return cipher.nonce + tag + ciphertext
 
 
-def append_encrypted_text(filename, key, text):
+def append_encrypted_text(filename, key, text, name):
     encrypted_text = encrypt_text(key, text)
 
     with open(filename, 'ab') as file:
-        file.write("secret:" + binascii.hexlify(encrypted_text) + "\n")
+        file.write(name + ":" + binascii.hexlify(encrypted_text) + "\n")
 
 
 def decrypt_text(key, ciphertext):
