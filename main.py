@@ -43,9 +43,9 @@ def write_new_password():
         print("password must be 12 characters or longer!")
         return
 
-    name = raw_input("Enter your password name (will be used to find your password to decrypt):")
+    search_key = raw_input("Enter your password name (will be used to find your password to decrypt):")
 
-    if not name:
+    if not search_key:
         print("Please provide name that your password will be stored under!")
         return
 
@@ -61,13 +61,22 @@ def write_new_password():
         with open(filename, 'w') as file:
             pass
 
-    append_encrypted_text(hashed_key, password, name)
-    print("Password for " + name + " encrypted and appended to your library!")
+    append_encrypted_text(hashed_key, password, search_key)
+    print("Password for " + search_key + " encrypted and appended to your library!")
 
 
 def read_password():
     key = getpass.getpass("Enter your MASTER password: ")
+
+    if not key:
+        print("Please provide your MASTER password")
+        return
+
     search_key = raw_input("Enter the password name to decrypt: ")
+
+    if not search_key:
+        print("Please provide name that your password will is stored under!")
+        return
 
     hashed_key = transform_key(key)
 
@@ -84,11 +93,11 @@ def encrypt_text(key, text):
     return cipher.nonce + tag + ciphertext
 
 
-def append_encrypted_text(key, password, name):
+def append_encrypted_text(key, password, search_key):
     encrypted_text = encrypt_text(key, password)
 
     with open(filename, 'ab') as file:
-        file.write(name + ":" + binascii.hexlify(encrypted_text) + "\n")
+        file.write(search_key + ":" + binascii.hexlify(encrypted_text) + "\n")
 
 
 def decrypt_text(key, ciphertext):
